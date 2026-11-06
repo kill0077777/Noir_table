@@ -307,7 +307,7 @@ public class MemberController {
 		LinkedMultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 		params.add("grant_type", "authorization_code");
 		params.add("client_id", "EcRl77o5MKP8XONskdgt");
-		params.add("client_secret", System.getenv("NAVER_CLIENT_SECRET"));
+		params.add("client_secret", "YOUR_NAVER_CLIENT_SECRET");
 		params.add("code", code);
 		params.add("state", state);
 		
@@ -395,7 +395,7 @@ public class MemberController {
 	    MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 	    params.add("code", code);
 	    params.add("client_id", "1094665047278-252f9pu3h7e9547j7e39tjcnq83r6a2p.apps.googleusercontent.com");
-	    params.add("client_secret", System.getenv("GOOGLE_CLIENT_SECRET"));
+	    params.add("client_secret", "YOUR_GOOGLE_CLIENT_SECRET");
 	    params.add("redirect_uri", "http://localhost:8090/noir/member/GoogleCallback");
 	    params.add("grant_type", "authorization_code");
 
