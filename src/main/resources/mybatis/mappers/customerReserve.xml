@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.customerReserve">
+	<!-- 예약 전체 조회 -->
+    <select id="selectAllReservations" resultType="com.noir.reservation.vo.CustomerReserveFirstVO">
+        SELECT 
+            RESERVE_ID,
+            MEAL_TIME,
+            RESERVE_DATE,
+            TIME_SLOT,
+            CREATED_AT
+        FROM ADMIN_RESERVATION
+        ORDER BY RESERVE_DATE DESC, TIME_SLOT ASC
+    </select>
+	
+	<!-- 좌석 전체 조회 -->
+    <select id="selectAllSeats" resultType="com.noir.reservation.vo.RestaurantSeatVO">
+        SELECT 
+            SEAT_ID,
+            LOCATION,
+            HEAD_COUNT,
+            FLOOR
+        FROM SEAT
+        ORDER BY FLOOR ASC, LOCATION ASC
+    </select>
+    
+    <!-- 예약한 좌석 번호 전체 조회 -->
+	<select id="selectAllReservedSeats" parameterType="int" resultType="int">
+	    SELECT SEAT_ID
+	    FROM CUSTOMER_RESERVATION
+	    WHERE RESERVE_ID = #{reserveId}
+	    AND STATUS = 'ACTIVE'
+	</select>
+    
+    <!-- 고객 - 예약정보 저장 -->
+    <insert id="insertCustomerReservation" parameterType="map">
+	    INSERT INTO CUSTOMER_RESERVATION (CUSTOMER_ID, MEMBER_ID, RESERVE_ID, SEAT_ID)
+	    VALUES (CUSTOMER_RESERVATION_SEQ.NEXTVAL,#{memberId}, #{reserveId}, #{seatId})
+	</insert>
+	
+	<!-- 잔액 확인 -->
+	<select id="getBalance" parameterType="int" resultType="Integer">
+        SELECT BALANCE
+        FROM ACCOUNT
+        WHERE ACCOUNT_ID = #{accountId}
+    </select>
+    
+    <!-- 잔액 추가 -->
+    <update id="updateBalance" parameterType="map">
+	    UPDATE ACCOUNT
+	    SET BALANCE = BALANCE + #{amount}
+	    WHERE ACCOUNT_ID = #{accountId}
+	</update>
+	
+	<!-- 거래내역 저장 -->
+	<insert id="insertTransaction" parameterType="map">
+	    INSERT INTO PAYMENT_TRANSACTION (
+	        TRANSACTION_ID, ACCOUNT_ID, TRANSACTION_TYPE, AMOUNT, TRANSACTION_DATE, CUSTOMER_ID
+	    ) VALUES (
+	        SEQ_PAYMENT_TRANSACTION_ID.NEXTVAL,
+	        #{accountId}, 
+	        #{type}, 
+	        #{totalPrice}, 
+	        SYSDATE,
+	        #{customerId}
+	    )
+	</insert>
+	
+	<!-- 해당 아이디에 대한 좌석 조회  -->
+	<select id="selectSeatById" parameterType="int" resultType="com.noir.reservation.vo.SeatVO">
+	    SELECT 
+	        SEAT_ID,
+	        LOCATION,
+	        HEAD_COUNT,
+	        FLOOR
+	    FROM SEAT
+	    WHERE SEAT_ID = #{seatId}
+	</select>
+	
+	<!-- 해당 아이디에 대한 예약 조회 -->
+	<select id="selectAdminReservationById" parameterType="int" resultType="com.noir.reservation.vo.AdminReservationVO">
+		SELECT 
+		  RESERVE_ID,
+		  MEAL_TIME,
+		  RESERVE_DATE,
+		  TIME_SLOT,
+		  FLOOR,
+		  CREATED_AT
+		FROM ADMIN_RESERVATION
+		WHERE RESERVE_ID = #{reserveId}
+	</select>
+	
+	<!-- 중복결제 방지 -->
+	<select id="countReservation" parameterType="map" resultType="int">
+	    SELECT COUNT(*) 
+	    FROM CUSTOMER_RESERVATION
+	    WHERE RESERVE_ID = #{reserveId}
+	    AND SEAT_ID = #{seatId}
+	    AND STATUS = 'ACTIVE'
+	</select>
+	
+	<resultMap id="reserveInfoMap" type="CustomerGetReserveInfoVO">
+	    <result property="seatId" column="SEAT_ID"/>
+	    <result property="location" column="LOCATION"/>
+	    <result property="headCount" column="HEAD_COUNT"/>
+	    <result property="seatFloor" column="SEAT_FLOOR"/>
+	    <result property="reserveId" column="RESERVE_ID"/>
+	    <result property="mealTime" column="MEAL_TIME"/>
+	    <result property="reserveDate" column="RESERVE_DATE"/>
+	    <result property="timeSlot" column="TIME_SLOT"/>
+	    <result property="createdAt" column="CREATED_AT"/>
+	</resultMap>
+	
+	
+	<select id="selectPayInfo" parameterType="map" resultMap="reserveInfoMap">
+	    SELECT
+	        s.SEAT_ID,
+	        s.LOCATION,
+	        s.HEAD_COUNT,
+	        s.FLOOR AS SEAT_FLOOR,
+	
+	        ar.RESERVE_ID,
+	        ar.MEAL_TIME,
+	        ar.RESERVE_DATE,
+	        ar.TIME_SLOT,
+	        ar.CREATED_AT
+	
+	    FROM CUSTOMER_RESERVATION cr
+	    JOIN SEAT s ON cr.SEAT_ID = s.SEAT_ID
+	    JOIN ADMIN_RESERVATION ar ON cr.RESERVE_ID = ar.RESERVE_ID
+	
+	    WHERE cr.MEMBER_ID = #{memberId}
+	      AND cr.RESERVE_ID = #{reserveId}
+	      AND cr.SEAT_ID = #{seatId}
+	      AND cr.STATUS = 'ACTIVE'
+	</select>
+	
+	<select id="getCustomerId" parameterType="map" resultType="int">
+	    SELECT CUSTOMER_ID
+	    FROM CUSTOMER_RESERVATION
+	    WHERE RESERVE_ID = #{reserveId}
+	      AND SEAT_ID = #{seatId}
+	      AND MEMBER_ID = #{memberId}
+	      AND status = 'ACTIVE'
+	</select>
+	
+</mapper>

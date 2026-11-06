@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+	[MyBatis Mapper 파일]
+	- 이 파일은 SQL 쿼리와 Java 객체를 연결하는 역할을 합니다.
+	- namespace는 해당 Mapper와 연결된 인터페이스 경로입니다.
+	- 예: mapper.admin.goods => mapper.admin.goods 인터페이스와 매핑됨
+-->
+<mapper namespace="mapper.base"> <!-- 이름 본인이 필요한걸로 반드시 바꾸세요 -->
+	
+	<!-- =========================================================
+	     ✅ 1. ResultMap 정의 영역
+	     - DB 테이블 컬럼 → VO/DTO 클래스 필드 매핑
+	     - 복잡한 조인 결과나 별칭(alias)을 사용할 때 유용
+	     - resultMap 태그를 사용
+	     예시:
+	     <resultMap id="goodsResultMap" type="GoodsVO">
+	         <id property="goodsId" column="goods_id"/>
+	         <result property="name" column="goods_name"/>
+	         ...
+	     </resultMap>
+	 ========================================================== -->
+	
+	
+	
+	
+	
+	<!-- =========================================================
+	     ✅ 2. SQL 매핑 영역
+	     - 실제 SQL 쿼리와 해당 id 값을 지정해서 Mapper 인터페이스와 연결
+	     - 사용 가능한 태그:
+	       - <select>   : 조회 (SELECT)
+	       - <insert>   : 삽입 (INSERT)
+	       - <update>   : 수정 (UPDATE)
+	       - <delete>   : 삭제 (DELETE)
+	     예시:
+	     <select id="selectAllGoods" resultType="GoodsVO">
+	         SELECT * FROM noir_menu
+	     </select>
+	 ========================================================== -->
+	
+	
+	
+	
+</mapper>

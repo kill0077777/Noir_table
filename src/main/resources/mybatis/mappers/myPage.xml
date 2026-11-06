@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.myPage">
+
+	<select id="getReserveCustomer" parameterType="int" resultType="CustomerReservationVO">
+	    SELECT 
+	        cr.CUSTOMER_ID     AS customerId,
+	        m.NAME             AS memberName,
+	        s.SEAT_ID          AS seatId,
+	        s.LOCATION         AS location,
+	        s.HEAD_COUNT       AS headCount,
+	        ar.RESERVE_DATE    AS reserveDate,
+	        ar.TIME_SLOT       AS timeSlot,
+	        cr.STATUS          AS status
+	    FROM 
+	        CUSTOMER_RESERVATION cr
+	    JOIN 
+	        NOIR_MEMBER m ON cr.MEMBER_ID = m.MEMBER_ID
+	    JOIN 
+	        ADMIN_RESERVATION ar ON cr.RESERVE_ID = ar.RESERVE_ID
+	    JOIN 
+	        SEAT s ON cr.SEAT_ID = s.SEAT_ID
+	    WHERE 
+	        cr.MEMBER_ID = #{memberId}
+	    ORDER BY 
+	        ar.RESERVE_DATE DESC, ar.TIME_SLOT, s.SEAT_ID
+	</select>
+
+	<!-- 회원 정보 조회  -->
+	<select id="getMemberInfo" parameterType="int" resultType="NoirMemberVO">
+	    SELECT 
+	        member_id     AS memberId,
+	        login_id      AS loginId,
+	        password      AS password,
+	        name          AS name,
+	        phone         AS phone,
+	        role          AS role,
+	        social_type   AS socialType,
+	        sns_id        AS snsId,
+	        profileImage  AS profileImage
+	    FROM 
+	        noir_member
+	    WHERE 
+	        member_id = #{memberId}
+	</select>
+
+    <!-- 회원 정보 수정  -->
+    <update id="updateMemberInfo" parameterType="NoirMemberVO">
+        UPDATE noir_member
+        SET
+            password = #{password},
+            phone = #{phone}
+        WHERE
+            member_id = #{memberId}
+    </update>
+	
+	<!-- 알림 조회 -->
+	<select id="getNotification" parameterType="int" resultType="NotificationVO">
+	  SELECT 
+	    n.NOTIFICATION_ID AS notificationId,
+	    n.CUSTOMER_ID     AS customerId,
+	    TO_CHAR(n.RESERVE_DATE, 'YYYY-MM-DD') AS reserveDate,
+	    n.TIME_SLOT       AS timeSlot,
+	    n.MESSAGE         AS message,
+	    n.IS_READ         AS isRead,
+	    n.CREATED_AT      AS createdAt,
+	    cr.SEAT_ID        AS seatId              
+	  FROM NOTIFICATION n
+	  JOIN CUSTOMER_RESERVATION cr ON n.CUSTOMER_ID = cr.CUSTOMER_ID
+	  WHERE cr.MEMBER_ID = #{memberId}
+	  ORDER BY n.CREATED_AT DESC
+	</select>
+	
+	<!-- 알림 읽음 처리 -->
+	<update id="updateNotificationRead" parameterType="int">
+	    UPDATE notification
+	    SET is_read = 1
+	    WHERE customer_id IN (
+	        SELECT customer_id
+	        FROM customer_reservation
+	        WHERE member_id = #{memberId}
+	    )
+	</update>
+</mapper>

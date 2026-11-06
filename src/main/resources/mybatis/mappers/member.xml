@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+	[MyBatis Mapper 파일]
+	- 이 파일은 SQL 쿼리와 Java 객체를 연결하는 역할을 합니다.
+	- namespace는 해당 Mapper와 연결된 인터페이스 경로입니다.
+	- 예: mapper.admin.goods => mapper.admin.goods 인터페이스와 매핑됨
+-->
+<mapper namespace="mapper.member"> <!-- 이름 본인이 필요한걸로 반드시 바꾸세요 -->
+	
+	<!-- =========================================================
+	     ✅ 1. ResultMap 정의 영역
+	     - DB 테이블 컬럼 → VO/DTO 클래스 필드 매핑
+	     - 복잡한 조인 결과나 별칭(alias)을 사용할 때 유용
+	     - resultMap 태그를 사용
+	     예시:
+	     <resultMap id="goodsResultMap" type="GoodsVO">
+	         <id property="goodsId" column="goods_id"/>
+	         <result property="name" column="goods_name"/>
+	         ...
+	     </resultMap>
+	 ========================================================== -->
+	<resultMap id="memberResult" type="memberVO">
+		<id property="id" column="member_id"/>
+		<result property="login_id" column="login_id" />
+		<result property="password" column="password" />
+		<result property="phone" column="phone" />
+		<result property="name" column="name" />
+		<result property="role" column="role" />
+		<result property="social_type" column="social_type" />
+		<result property="sns_id" column="sns_id" />
+		<result property="profileImage" column="profileimage" />
+	</resultMap>
+	
+	<resultMap id="profileResult" type="memberProfileVO">
+		<id property="profile_id" column="profile_id"/>
+		<result property="member_id" column="member_id" />
+		<result property="grade" column="grade" />
+		<result property="total_spent" column="total_spent" />
+		<result property="visit_count" column="visit_count" />
+		<result property="last_visit" column="last_visit" />
+	</resultMap>
+	
+	<!-- =========================================================
+	     ✅ 2. SQL 매핑 영역
+	     - 실제 SQL 쿼리와 해당 id 값을 지정해서 Mapper 인터페이스와 연결
+	     - 사용 가능한 태그:
+	       - <select>   : 조회 (SELECT)
+	       - <insert>   : 삽입 (INSERT)
+	       - <update>   : 수정 (UPDATE)
+	       - <delete>   : 삭제 (DELETE)
+	     예시:
+	     <select id="selectAllGoods" resultType="GoodsVO">
+	         SELECT * FROM noir_menu
+	     </select>
+	 ========================================================== -->
+	 
+	<insert id="insertMember" parameterType="com.noir.member.vo.MemberVO">
+	    INSERT INTO NOIR_MEMBER (
+	    	"MEMBER_ID",
+	        "LOGIN_ID",
+	        "PASSWORD",
+	        "NAME",
+	        "PHONE",
+	        "ROLE"
+	    ) VALUES (
+	    	seq_noir_member_id.NEXTVAL,
+	        #{login_id},
+	        #{password},
+	        #{name},
+	        #{phone},
+	        #{role}
+	    )
+	</insert>
+	
+	<insert id="insertKakaoMember" parameterType="com.noir.member.vo.MemberVO">
+	    INSERT INTO NOIR_MEMBER (
+	    	"MEMBER_ID",
+	        "LOGIN_ID",
+	        "PASSWORD",
+	        "NAME",
+	        "PHONE",
+	        "ROLE",
+	        "SOCIAL_TYPE",
+	        "SNS_ID",
+	        "PROFILEIMAGE"
+	        
+	    ) VALUES (
+	    	seq_noir_member_id.NEXTVAL,
+	        #{login_id},
+	        #{password},
+	        #{name},
+	        #{phone},
+	        #{role},
+	        #{social_type},
+	        #{sns_id},
+	        #{profileImage}
+	    )
+	</insert>
+	
+	<select id="countByLoginId" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM NOIR_MEMBER WHERE LOGIN_ID = #{loginId}
+	</select>
+	
+
+	<select id="login" parameterType="map" resultType="com.noir.member.vo.MemberVO">
+	    SELECT 
+	        member_id AS id,
+	        login_id,
+	        password,
+	        name,
+	        phone,
+	        role,
+	        social_type,
+	        sns_id,
+	        profileImage
+	    FROM NOIR_MEMBER
+	    WHERE LOGIN_ID = #{login_id} AND PASSWORD = #{password}
+	</select>
+	
+	<select id="findByKakaoId" parameterType="String" resultMap="memberResult">
+		SELECT * FROM NOIR_MEMBER WHERE SNS_ID = #{snsId}
+	</select>
+	
+	<insert id="insertGoogleMember" parameterType="com.noir.member.vo.MemberVO">
+	    INSERT INTO NOIR_MEMBER (
+	    	"MEMBER_ID",
+	        "LOGIN_ID",
+	        "PASSWORD",
+	        "NAME",
+	        "ROLE",
+	        "SOCIAL_TYPE",
+	        "SNS_ID",
+	        "PROFILEIMAGE"
+	        
+	    ) VALUES (
+	    	seq_noir_member_id.NEXTVAL,
+	        #{login_id},
+	        #{password},
+	        #{name},
+	        #{role},
+	        #{social_type},
+	        #{sns_id},
+	        #{profileImage}
+	    )
+	</insert>
+	
+	<update id="saveGooglePhone" parameterType="map">
+		  UPDATE NOIR_MEMBER
+		  SET PHONE = #{phone}
+		  WHERE SNS_ID = #{snsId}
+	</update>
+	
+	<update id="updateMember" parameterType="map">
+		  UPDATE NOIR_MEMBER
+		  SET 
+		    PASSWORD = #{password},
+		    NAME = #{name},
+		    PHONE = #{phone},
+		    PROFILEIMAGE = #{profileImage,jdbcType=VARCHAR}
+		  WHERE MEMBER_ID = #{id}
+	</update>
+	
+	<update id="snslink" parameterType="map">
+		  UPDATE NOIR_MEMBER
+		  SET 
+		    social_type = #{social_type},
+		    sns_id = #{sns_id},
+		    PROFILEIMAGE = #{profileImage,jdbcType=VARCHAR}
+		  WHERE MEMBER_ID = #{id}
+	</update>
+	
+	<select id="memberList" parameterType="map" resultMap="memberResult">
+		  SELECT * FROM (
+		    SELECT inner_table.*, ROWNUM rnum
+		    FROM (
+		      SELECT * FROM noir_member
+		      WHERE login_id != 'admin'
+		      ORDER BY member_id DESC
+		    ) inner_table
+		    WHERE ROWNUM &lt;= #{endRow}
+		  )
+		  WHERE rnum &gt; #{startRow}
+	</select>
+	
+	<select id="findByLoginId" parameterType="String" resultMap="memberResult">
+		select * from noir_member where login_id = #{loginId}
+	</select>
+	
+	<insert id="insertProfile" parameterType="int">
+		insert into noir_customer_profile(
+			profile_id,
+			member_id,
+			last_visit
+		)
+		values(
+			seq_noir_customer_profile_id.NEXTVAL,
+			#{memberId},
+			SYSDATE
+		)
+		
+	</insert>
+	
+	<select id="findProfileById" parameterType="int" resultMap="profileResult">
+		select * from noir_customer_profile where member_id = #{id}
+	</select>
+	
+	<select id="getMemberProfileList" resultMap="profileResult">
+		select * from noir_customer_profile
+	</select>
+	
+	<update id="upGradeCustomer" parameterType="map">
+		update noir_customer_profile
+		SET
+			grade=#{grade}
+		WHERE
+			profile_id=#{profile_id}
+	</update>
+	
+	<select id="getVIPMemberList" resultMap="memberResult">
+		SELECT m.*
+		FROM noir_member m
+		JOIN noir_customer_profile p ON m.member_id = p.member_id
+		WHERE p.grade = 'VIP'
+	</select>
+	
+	<select id="countAllExceptAdmin" resultType="int">
+	  SELECT COUNT(*) FROM noir_member WHERE login_id != 'admin'
+	</select>
+	
+	
+	<select id="searchMemberListPaged" parameterType="map" resultMap="memberResult">
+	  SELECT * FROM (
+	      SELECT ROWNUM AS rnum, inner_query.*
+	      FROM (
+	          SELECT *
+	          FROM noir_member
+	          WHERE login_id LIKE #{searchId}
+	            AND login_id != 'admin'
+	          ORDER BY member_id DESC
+	      ) inner_query
+	      WHERE ROWNUM &lt;= #{endRow}
+	  )
+	  WHERE rnum &gt; #{startRow}
+	</select>
+	
+	<select id="countSearchMember" parameterType="string" resultType="int">
+	  SELECT COUNT(*)
+	  FROM noir_member
+	  WHERE login_id LIKE '%' || #{trim} || '%'
+	    AND login_id != 'admin'
+	</select>
+	
+	<select id="findMeberIdByCustomerId" parameterType="int" resultType="int">
+		select member_id from customer_reservation where customer_id=#{customer_id}
+	</select>
+	
+	<select id="findNameByMemberId" parameterType="int" resultType="String">
+		select name from noir_member where member_id = #{member_id}
+	</select>
+	
+	<select id="selectCountByLoginId" parameterType="String" resultType="int">
+	    SELECT COUNT(*) FROM noir_member WHERE login_id = #{loginId}
+	</select>
+</mapper>

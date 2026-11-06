@@ -1,0 +1,19 @@
+# Maven / build output
+target/
+*.class
+*.war
+*.jar
+
+# IDE files
+.classpath
+.project
+.settings/
+.springBeans
+.idea/
+.vscode/
+
+# Local configuration and secrets
+.env
+.env.*
+*.local
+src/main/webapp/WEB-INF/config/jdbc/jdbc-local.properties

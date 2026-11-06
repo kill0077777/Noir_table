@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+   <filter>
+        <filter-name>encodingFilter</filter-name>
+        <filter-class>
+            org.springframework.web.filter.CharacterEncodingFilter
+   	    </filter-class>
+        <init-param>
+            <param-name>encoding</param-name>
+            <param-value>UTF-8</param-value>
+        </init-param>
+	</filter>
+	<filter-mapping>
+        <filter-name>encodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/mybatis-context.xml</param-value>
+	</context-param>
+	
+	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<!-- Processes application requests -->
+	<servlet>
+		<servlet-name>appServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>/WEB-INF/spring/appServlet/servlet-context.xml</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+		
+	<servlet-mapping>
+		<servlet-name>appServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+   
+	<!--     http://localhost:8090/noir/main/main.do 주소를 입력하면  main화면을 요청! -->
+	<!-- default 서블릿 선언 추가 (이게 있어야 favicon.ico를 톰캣이 직접 처리 가능) -->
+	<servlet>
+	    <servlet-name>default</servlet-name>
+	    <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+	    <load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+	    <servlet-name>default</servlet-name>
+	    <url-pattern>/favicon.ico</url-pattern>
+	</servlet-mapping>
+</web-app>
+
+
+
+
+
+

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+	[MyBatis Mapper 파일]
+	- 이 파일은 SQL 쿼리와 Java 객체를 연결하는 역할을 합니다.
+	- namespace는 해당 Mapper와 연결된 인터페이스 경로입니다.
+	- 예: mapper.admin.goods => mapper.admin.goods 인터페이스와 매핑됨
+-->
+<mapper namespace="mapper.menu"> <!-- 이름 본인이 필요한걸로 반드시 바꾸세요 -->
+	
+	<!-- =========================================================
+	     ✅ 1. ResultMap 정의 영역
+	     - DB 테이블 컬럼 → VO/DTO 클래스 필드 매핑
+	     - 복잡한 조인 결과나 별칭(alias)을 사용할 때 유용
+	     - resultMap 태그를 사용
+	     예시:
+	     <resultMap id="goodsResultMap" type="GoodsVO">
+	         <id property="goodsId" column="goods_id"/>
+	         <result property="name" column="goods_name"/>
+	         ...
+	     </resultMap>
+	 ========================================================== -->
+	<resultMap id="menuResult" type="MenuVO">
+		<id property="menu_id" column="menu_id"/>
+	    <result property="menu_name" column="menu_name"/>
+	    <result property="menu_english_name" column="menu_english_name"/>
+	    <result property="menu_description" column="menu_description"/>
+	    <result property="menu_type" column="menu_type"/>
+	    <result property="menu_order" column="menu_order"/>
+	    <result property="photo_id" column="photo_id"/>
+	</resultMap>
+	
+	<resultMap id="supplementResult" type="SupplementVO">
+		<id property="menu_id" column="menu_id"/>
+		<result property="menu_name" column="menu_name"/>
+	    <result property="menu_english_name" column="menu_english_name"/>
+	    <result property="menu_description" column="menu_description"/>
+	    <result property="menu_type" column="menu_type"/>
+	    <result property="menu_price" column="menu_price"/>
+	</resultMap>
+	
+	<resultMap id="wineResult" type="com.noir.menu.vo.WineVO">
+		<id property="wine_id" column="wine id"/>
+		<result property="wine_name" column="wine name"/>
+		<result property="wine_type" column="wine type"/>
+		<result property="region" column="region"/>
+		<result property="vintage" column="vintage"/>
+		<result property="producer" column="producer"/>
+		<result property="price" column="price"/>
+		<result property="bottle_size" column="bottle size"/>
+		<result property="description" column="description"/>
+		<result property="wine_category" column="wine category"/>
+	</resultMap>
+	
+	<!-- 	
+	int wine_id;
+	String wine_name;
+	String wine_type;
+	String region;
+	String vintage;
+	String producer;
+	String price;
+	String bottle_size;
+	String description;
+	String wine_category; 
+	-->
+	
+	<select id="selectMenuByType" parameterType="String" resultMap="menuResult">
+        SELECT *
+        FROM noir_menu
+        WHERE menu_type = #{menuType}
+        ORDER BY menu_order ASC
+    </select>
+    
+	<select id="selectSupplementMenu" resultMap="supplementResult">
+        SELECT *
+        FROM noir_supplement_menu
+    </select>
+	
+	<select id="selectWineList" parameterType="map" resultMap="wineResult">
+		SELECT * FROM noir_wine
+		WHERE 1 = 1
+	<if test="wine_name != null and wine_name != ''">
+	  	AND wine_name LIKE '%' || #{wine_name} || '%'
+	</if>
+	<if test="wine_type != null">
+	  	AND wine_type = #{wine_type}
+	</if>
+	<if test="region != null">
+	  	AND region = #{region}
+	</if>
+	<if test="vintage != null">
+	  	AND vintage = #{vintage}
+	</if>
+	<if test="wine_category != null">
+	  	AND wine_category = #{wine_category}
+	</if>
+		ORDER BY wine_name
+	</select>
+	 
+	<update id="updateSupplementMenu" parameterType="SupplementVO">
+		  UPDATE noir_supplement_menu
+		  SET menu_name = #{menu_name},
+		      menu_english_name = #{menu_english_name},
+		      menu_description = #{menu_description},
+		      menu_type = #{menu_type},
+		      menu_price = #{menu_price}
+		  WHERE menu_id = #{menu_id}
+	</update> 
+	
+	<update id="updateMenu" parameterType="MenuVO">
+		  UPDATE noir_menu
+		  SET menu_name = #{menu_name},
+		      menu_english_name = #{menu_english_name},
+		      menu_description = #{menu_description}
+		  WHERE menu_id = #{menu_id}
+	</update>
+	
+	<update id="swapOrder" parameterType="map">
+		  UPDATE noir_menu
+		  SET menu_order = #{order}
+		  WHERE menu_id = #{id}
+	</update>
+	
+	<insert id="insertSupplementMenu" parameterType="map">
+		  insert into noir_supplement_menu
+		  (menu_id,menu_name,menu_english_name,menu_description,menu_type,menu_price)
+		  values
+		  (seq_noir_supplement_menu_id.NEXTVAL,#{menu_name},#{menu_english_name},#{menu_description},#{menu_type},#{menu_price})
+	</insert>
+	
+	<select id="selectMaxOrderByType" parameterType="String" resultType="int">
+	  SELECT NVL(MAX(menu_order), 0)
+	  FROM noir_menu
+	  WHERE menu_type = #{menuType}
+	</select>
+	
+	<insert id="insertMenu" parameterType="map">
+		  insert into noir_menu
+		  (menu_id,menu_name,menu_english_name,menu_description,menu_type,menu_order)
+		  values
+		  (seq_noir_menu_id.NEXTVAL,#{menu_name},#{menu_english_name},#{menu_description},#{menu_type},#{menu_order})
+	</insert>
+	
+	<delete id="deleteSupplementMenu" parameterType="int">
+		delete from noir_supplement_menu where menu_id=#{menu_id}
+	</delete>
+	
+	<delete id="deleteMenu" parameterType="int">
+		delete from noir_menu where menu_id=#{menu_id}
+	</delete>
+	
+	<insert id="insertWine" parameterType="map">
+		insert into noir_wine
+		(wine_id,wine_name,wine_type,region,vintage,producer,price,bottle_size,description,wine_category)
+		values
+		(seq_noir_wine_id.NEXTVAL,#{wine_name},#{wine_type},#{region},#{vintage},#{producer},#{price},#{bottle_size},#{description},#{wine_category})
+	</insert>
+	
+	<delete id="wineDelete" parameterType="int">
+		delete from noir_wine where wine_id=#{wineId}
+	</delete>
+</mapper>

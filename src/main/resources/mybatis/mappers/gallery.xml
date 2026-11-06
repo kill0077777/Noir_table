@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+	[MyBatis Mapper 파일]
+	- 이 파일은 SQL 쿼리와 Java 객체를 연결하는 역할을 합니다.
+	- namespace는 해당 Mapper와 연결된 인터페이스 경로입니다.
+	- 예: mapper.admin.goods => mapper.admin.goods 인터페이스와 매핑됨
+-->
+<mapper namespace="mapper.gallery"> <!-- 이름 본인이 필요한걸로 반드시 바꾸세요 -->
+
+	<resultMap id="photoResult" type="PhotoVO">
+		<id property="id" column="photo_id"/>
+	    <result property="photo_url" column="photo_url"/>
+	    <result property="photo_type" column="photo_type"/>
+	</resultMap>
+	
+	<insert id="insertPhoto" parameterType="com.noir.gallery.vo.PhotoVO">
+	    INSERT INTO NOIR_PHOTO (
+	    	"PHOTO_ID",
+	        "PHOTO_URL",
+	        "PHOTO_TYPE"
+	    ) VALUES (
+	    	seq_noir_photo_id.NEXTVAL,
+	        #{photo_url},
+	        #{photo_type}
+	    )
+	</insert>
+	
+	<select id="selectAllPhotos" resultMap="photoResult">
+		SELECT * FROM NOIR_PHOTO ORDER BY PHOTO_ID DESC
+	</select>
+	
+	<delete id="deletePhoto" parameterType="int">
+		DELETE FROM NOIR_PHOTO WHERE PHOTO_ID=#{photoId}
+	</delete>
+		
+</mapper>

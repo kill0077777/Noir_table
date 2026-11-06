@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mappers.adminReserve">
+
+    <insert id="insertReserve" parameterType="com.noir.reservation.vo.AdminReserveAddVO">
+        INSERT 
+        INTO ADMIN_RESERVATION (
+            RESERVE_ID, MEAL_TIME, RESERVE_DATE, TIME_SLOT, CREATED_AT
+        ) VALUES (
+            ADMIN_RESERVATION_SEQ.NEXTVAL,
+            #{mealTime},
+            TO_DATE(#{reserveDate}, 'YYYY-MM-DD'),
+            #{timeSlot},
+            SYSTIMESTAMP
+        )
+    </insert>
+    
+	<select id="getReservedIdByDate" resultType="com.noir.reservation.vo.AdminCheckSeatVO">
+	    SELECT CUSTOMER_ID AS customerId,
+	    	   MEMBER_ID AS memberId,
+	    	   SEAT_ID AS seatId
+	    FROM CUSTOMER_RESERVATION
+	    WHERE RESERVE_ID = (
+	        SELECT RESERVE_ID
+	        FROM ADMIN_RESERVATION
+	        WHERE TRUNC(RESERVE_DATE) = TO_DATE(#{date}, 'YYYY-MM-DD')
+	          AND TIME_SLOT = #{time}
+	          AND STATUS = 'ACTIVE'
+	    )
+	</select>
+	<!-- 알림 추가  -->
+	<insert id="adminAddDeleteMessage" parameterType="map">
+	    INSERT INTO notification (
+	        notification_id,
+	        customer_id,
+	        reserve_date,
+	        time_slot,
+	        message,
+	        is_read,
+	        created_at
+	    ) VALUES (
+	        seq_notification_idSTART.NEXTVAL,
+	        #{customerId},
+	        TO_DATE(#{date}, 'YYYY-MM-DD'),
+	        #{time},
+	        #{content},
+	        0,
+	        CURRENT_TIMESTAMP
+	    )
+	</insert>
+	
+	<!-- 특정 예약의 결제 금액 조회 -->
+	<select id="getRefundMoney" parameterType="int" resultType="int">
+	    SELECT AMOUNT
+	    FROM PAYMENT_TRANSACTION
+	    WHERE CUSTOMER_ID = #{customerId}
+	    
+	</select>
+	
+	<!-- 환불 거래 내역 추가 -->
+	<insert id="insertRefundTransaction" parameterType="map">
+	    INSERT INTO PAYMENT_TRANSACTION (
+	        TRANSACTION_ID,
+	        ACCOUNT_ID,
+	        TRANSACTION_TYPE,
+	        AMOUNT,
+	        TRANSACTION_DATE,
+	        CUSTOMER_ID
+	    ) VALUES (
+	        SEQ_PAYMENT_TRANSACTION_ID.NEXTVAL,
+	        #{accountId},
+	        #{refund},
+	        #{refundMoney},
+	        SYSDATE,
+	        #{customerId}
+	    )
+	</insert>
+
+	<!-- 잔액 차감 (금액만큼 차감) -->
+	<update id="updateBalance" parameterType="int">
+	    UPDATE ACCOUNT
+	    SET BALANCE = BALANCE - #{refundMoney}
+	    WHERE ACCOUNT_ID = 1
+	</update>
+	
+	<!-- 예약취소  -->
+	<update id="adminReserveDelete" parameterType="int">
+	    UPDATE CUSTOMER_RESERVATION
+	    SET STATUS = 'CANCELLED'
+	    WHERE CUSTOMER_ID = #{customerId}
+	</update>
+</mapper>

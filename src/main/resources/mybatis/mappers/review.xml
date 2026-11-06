@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<!--
+	[MyBatis Mapper 파일]
+	- 이 파일은 SQL 쿼리와 Java 객체를 연결하는 역할을 합니다.
+	- namespace는 해당 Mapper와 연결된 인터페이스 경로입니다.
+	- 예: mapper.admin.goods => mapper.admin.goods 인터페이스와 매핑됨
+-->
+<mapper namespace="mapper.review"> <!-- 이름 본인이 필요한걸로 반드시 바꾸세요 -->
+	
+	<!--
+	=========================================================
+		✅ 1. ResultMap 정의 영역
+	 	 - DB 테이블 컬럼 → VO/DTO 클래스 필드 매핑
+		 - 복잡한 조인 결과나 별칭(alias)을 사용할 때 유용
+		 - resultMap 태그를 사용
+		예시:
+		<resultMap id="goodsResultMap" type="GoodsVO">
+			<id property="goodsId" column="goods_id"/>
+			<result property="name" column="goods_name"/>
+	 		...
+		</resultMap>
+	 ==========================================================
+	 -->
+	<resultMap id="reviewMap" type="ReviewVO">
+		<id property="reviewId" column="review_id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="rating" column="rating"/>
+		<result property="customer_id" column="customer_id"/>
+		<result property="photoUrls" column="photo_url"/>
+	</resultMap>
+	
+	<resultMap id="reviewCustomerMap" type="com.noir.review.vo.ReviewCustomerVO">
+		<id property="customer_id" column="customer_id"/>
+		<result property="member_id" column="member_id"/>
+		<result property="seat_id" column="seat_id"/>
+		<result property="reserve_id" column="reserve_id"/>
+		<result property="status" column="status"/>
+	</resultMap>
+	
+	<resultMap id="reviewAdminMap" type="com.noir.review.vo.ReviewAdminVO">
+		<id property="reserve_id" column="reserve_id"/>
+		<result property="meal_time" column="meal_time"/>
+		<result property="reserve_date" column="reserve_date"/>
+		<result property="time_slot" column="time_slot"/>
+		<result property="created_at" column="created_at"/>
+	</resultMap>
+
+	<!--
+	=========================================================
+		✅ 2. SQL 매핑 영역
+		 - 실제 SQL 쿼리와 해당 id 값을 지정해서 Mapper 인터페이스와 연결
+		 - 사용 가능한 태그:
+		   - <select>   : 조회 (SELECT)
+		   - <insert>   : 삽입 (INSERT)
+		   - <update>   : 수정 (UPDATE)
+		   - <delete>   : 삭제 (DELETE)
+		예시:
+		<select id="selectAllGoods" resultType="GoodsVO">
+			SELECT * FROM noir_menu
+		</select>
+	========================================================== 
+	-->
+
+
+	<!--   리뷰 리스트 (예약정보 JOIN) 페이징 쿼리 추가 -->
+	<select id="selectReviewsByPaging" resultMap="reviewMap" parameterType="map">
+	  SELECT * FROM (
+	    SELECT inner_query.*, ROWNUM rn
+	    FROM (
+	      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
+	             cr.reserve_id, cr.status, cr.seat_id, cr.member_id
+	      FROM noir_review r
+	      LEFT JOIN customer_reservation cr
+	        ON r.customer_id = cr.customer_id
+	      ORDER BY r.review_id DESC
+	    ) inner_query
+	    WHERE ROWNUM &lt;= #{offset} + #{limit}
+	  )
+	  WHERE rn &gt; #{offset}
+	</select>	
+
+	<!-- 전체 카운트 쿼리 추가 -->
+	<select id="selectReviewCount" resultType="int">
+	    SELECT COUNT(*) FROM noir_review
+	</select>
+
+	<!-- 리뷰 상세 (예약정보 JOIN) -->
+	<select id="selectReviewById" resultMap="reviewMap">
+		select * from noir_review where review_id = #{reviewId}
+	</select>
+
+	<select id="findReserveByMemberId" parameterType="int" resultMap="reviewCustomerMap">
+		
+		SELECT * FROM customer_reservation where member_id = #{member_id}
+		
+	</select>
+	
+	<select id="findAdminByReserveId" parameterType="int" resultMap="reviewAdminMap">
+		
+		SELECT * FROM admin_reservation where reserve_id = #{reserve_id}
+		
+	</select>
+	
+
+	<!-- 리뷰 등록 (리뷰ID 반환) -->
+	<insert id="insertReview" parameterType="com.noir.review.vo.ReviewVO">
+	  INSERT INTO noir_review (
+	    review_id,
+	    title,
+	    content,
+	    rating,
+	    customer_id
+	    <if test="photoUrls != null and photoUrls != ''">
+	      , photo_url
+	    </if>
+	  )
+	  VALUES (
+	    seq_noir_review_id.NEXTVAL,
+	    #{title},
+	    #{content},
+	    #{rating},
+	    #{customer_id}
+	    <if test="photoUrls != null and photoUrls != ''">
+	      , #{photoUrls}
+	    </if>
+	  )
+	</insert>
+
+	<!-- 리뷰 수정 -->
+	<update id="updateReview" parameterType="com.noir.review.vo.ReviewVO">
+		UPDATE noir_review
+		SET title=#{title}, content=#{content}, rating=#{rating}, photo_url=#{photoUrls}
+		WHERE review_id=#{reviewId}
+	</update>
+
+	<!-- 리뷰 삭제 -->
+	<delete id="deleteReview" parameterType="long">
+		DELETE FROM noir_review WHERE review_id = #{reviewId}
+	</delete>
+
+	<!-- 리뷰 이미지 등록 (여러번 호출됨) -->
+	<insert id="insertReviewPhoto" parameterType="map">
+		INSERT INTO noir_photo (photo_id, review_id, photo_url, photo_type)
+		VALUES (noir_photo_seq.NEXTVAL, #{reviewId}, #{photoUrl}, 'GALLERY')
+	</insert>
+
+	<!-- 특정 리뷰의 이미지 전체 삭제 (수정 시 사용) -->
+	<delete id="deleteReviewPhotos" parameterType="long">
+		DELETE FROM noir_photo WHERE review_id = #{reviewId}
+	</delete>
+
+	<!-- 특정 리뷰의 모든 이미지 URL 목록 -->
+	<select id="selectReviewPhotos" parameterType="long" resultType="string">
+		SELECT photo_url FROM noir_photo WHERE review_id = #{reviewId}
+	</select>
+	
+	<select id="findReserve" resultMap="reviewCustomerMap">
+			SELECT * FROM customer_reservation
+	</select>
+	
+	<select id="getReserveByCustomId" parameterType="int" resultMap="reviewCustomerMap">
+		select * from customer_reservation where customer_id=#{customer_id}
+	</select>
+	
+	<select id="findAdminReserveByreserveId" parameterType="int" resultMap="reviewAdminMap">
+		select * from admin_reservation where reserve_id = #{reserve_id}
+	</select>
+	
+	<select id="myCustomerList" parameterType="int" resultType="int">
+		select customer_id customer_reservation where member_id = #{member_id}
+	</select>
+	
+	<select id="myReviewList" parameterType="int" resultMap="reviewMap">
+		select * from noir_review where customer_id = #{customer_id}
+	</select>
+	
+	<select id="getPagedReviewListByMember" parameterType="map" resultMap="reviewMap">
+	  SELECT * FROM (
+	    SELECT inner_query.*, ROWNUM rn
+	    FROM (
+	      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
+	             cr.reserve_id, cr.status, cr.seat_id, cr.member_id
+	      FROM noir_review r
+	      JOIN customer_reservation cr
+	        ON r.customer_id = cr.customer_id
+	      WHERE cr.member_id = #{memberId}
+	      ORDER BY r.review_id DESC
+	    ) inner_query
+	    WHERE ROWNUM &lt;= #{offset} + #{pageSize}
+	  )
+	  WHERE rn &gt; #{offset}
+	</select>
+	
+	<select id="getMyReviewCount" parameterType="int" resultType="int">
+		SELECT COUNT(*)
+		FROM noir_review r
+		JOIN customer_reservation cr
+		  ON r.customer_id = cr.customer_id
+		WHERE cr.member_id = #{memberId}
+	</select>
+</mapper>

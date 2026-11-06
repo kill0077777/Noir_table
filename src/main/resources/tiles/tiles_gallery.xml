@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 2.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_2_0.dtd">
+<tiles-definitions>
+
+      <!-- 
+      
+      <definition name="/[요청경로]" extends="baseLayout">
+	    <put-attribute name="title" value="[페이지 제목]" />
+	    <put-attribute name="body" value="/WEB-INF/views/[폴더]/[jsp파일].jsp" />
+	  </definition>
+      
+       -->
+
+	  <definition name="/gallery/registerForm" extends="baseLayout">
+         <put-attribute name="title" value="𝐍𝐎𝐈𝐑 | gallery" />
+         <put-attribute name="body" value="/WEB-INF/views/gallery/registerForm.jsp" />
+      </definition>
+      
+</tiles-definitions>
+
+

@@ -1,0 +1,25 @@
+@charset "UTF-8";
+
+.pagination {
+	display: inline-block;
+	margin-top: 20px;
+}
+.pagination a,
+.pagination strong {
+	color: #333;
+	float: left;
+	padding: 8px 16px;
+	text-decoration: none;
+	transition: background-color 0.3s;
+	border: 1px solid #ddd;
+	margin: 0 4px;
+	border-radius: 5px;
+}
+.pagination a:hover {
+	background-color: #f0f0f0;
+}
+.pagination strong {
+	background-color: #333;
+	color: white;
+	font-weight: bold;
+}
