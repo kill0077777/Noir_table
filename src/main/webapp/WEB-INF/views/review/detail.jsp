@@ -17,7 +17,7 @@
 	  opacity: 1;
 	  transform: translateY(0);
 	}
-	
+
 	/* 상단 아이콘 */
 	.icon_box {
 	  display: flex;
@@ -27,7 +27,7 @@
 	  width: 50px;
 	  height: 50px;
 	}
-	
+
     body {
         background-color: #fefefe;
         color: #111;
@@ -140,7 +140,7 @@
         background-color: #111;
         color: #fff;
     }
-	
+
 	.star-rating {
 	  display: inline-block;
 	}
@@ -150,7 +150,7 @@
 	}
 	.star-rating .filled {
 	  color: #000; /* Noir 느낌이면 #111 또는 #FFD700 골드로도 변경 가능 */
-	}    
+	}
 </style>
 <div class="icon_box fade-up" style="margin-top:30px; margin-bottom:20px;">
   <img src="${contextPath}/resources/image/noir_icon.png"/>
@@ -159,7 +159,7 @@
 
 <div class="review-container fade-up">
 	<div style="font-size:30px; margin-bottom:25px; text-align:center;">
-    	<strong>${review.title}</strong>
+			<strong><c:out value="${review.title}" /></strong>
 	</div>
 	<div class="review-header" style="display: flex; gap: 30px; flex-wrap: wrap;">
 
@@ -169,9 +169,9 @@
 	            <i class="${i <= review.rating ? 'fas' : 'far'} fa-star" style="color:#FFD700;"></i>
 	        </c:forEach>
 	    </div>
-	
+
 	    <div><strong>식사 시간:</strong> ${reserve.reviewAdminVO.meal_time}</div>
-	
+
 	    <div>
 	        <strong>예약 날짜:</strong>
 	        <fmt:formatDate value="${reserve.reviewAdminVO.reserve_date}" pattern="yyyy-MM-dd" />
@@ -184,7 +184,7 @@
 	            <img src="${contextPath}${review.photoUrls}" alt="리뷰 사진" />
 	        </div>
 	    </c:when>
-	
+
 	    <c:when test="${not empty review.photoUrls}">
 	        <div class="review-photo">
 	            <c:forEach var="photo" items="${fn:split(review.photoUrls, ',')}">
@@ -196,7 +196,7 @@
 
     <div class="review-content">
         <label><strong>내용</strong></label>
-        <textarea readonly>${review.content}</textarea>
+	        <textarea readonly><c:out value="${review.content}" /></textarea>
     </div>
 
     <div class="review-buttons">
@@ -208,7 +208,6 @@
                 </form>
                 <form action="${contextPath}/review/delete.do" method="post" style="display:inline;">
                     <input type="hidden" name="reviewId" value="${review.reviewId}" />
-                    <input type="hidden" name="photoUrls" value="${review.photoUrls}"/>
                     <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
                 </form>
             </c:if>

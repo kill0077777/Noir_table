@@ -20,7 +20,7 @@ public interface ReviewDAO {
 	void updateReview(ReviewVO review) throws Exception;
 
 	//리뷰게시판 삭제하기
-	void deleteReview(int reviewId) throws Exception;
+	void deleteReview(int reviewId, int memberId) throws Exception;
 
 	// 이미지 관련
 	List<String> selectReviewPhotos(Long reviewId) throws Exception;

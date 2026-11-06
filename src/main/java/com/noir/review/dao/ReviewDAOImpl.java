@@ -17,7 +17,7 @@ import com.noir.review.vo.ReviewVO;
 
 @Repository
 public class ReviewDAOImpl implements ReviewDAO {
-	
+
 	@Autowired
 	private SqlSession sqlSession;
 
@@ -26,20 +26,20 @@ public class ReviewDAOImpl implements ReviewDAO {
 	    Map<String, Object> param = new HashMap<>();
 	    param.put("offset", offset);
 	    param.put("limit", limit);
-	    
+
 	    List<ReviewVO> list = sqlSession.selectList("mapper.review.selectReviewsByPaging", param);
-	    	
+
 	    for(ReviewVO review : list) {
-	    	
+
 	    	int customer_id = review.getCustomer_id();
-	    	
+
 	    	int member_id = sqlSession.selectOne("mapper.member.findMeberIdByCustomerId",customer_id);
-	    	
+
 	    	String userName = sqlSession.selectOne("mapper.member.findNameByMemberId",member_id);
-	    	
+
 	    	review.setUserName(userName);
 	    }
-	    
+
 	    return list;
 	}
 
@@ -64,8 +64,11 @@ public class ReviewDAOImpl implements ReviewDAO {
 	}
 
 	@Override
-	public void deleteReview(int reviewId) throws Exception {
-		sqlSession.delete("mapper.review.deleteReview", reviewId);
+	public void deleteReview(int reviewId, int memberId) throws Exception {
+		Map<String, Object> param = new HashMap<>();
+		param.put("reviewId", reviewId);
+		param.put("memberId", memberId);
+		sqlSession.delete("mapper.review.deleteReview", param);
 	}
 
 	@Override
@@ -85,91 +88,91 @@ public class ReviewDAOImpl implements ReviewDAO {
 	public void deleteReviewPhotos(int reviewId) throws Exception {
 		sqlSession.delete("mapper.review.deleteReviewPhotos", reviewId);
 	}
-	
+
 	public List<ReviewCustomerVO> findReserveByMemberId(int member_id) {
-		
+
 		List<ReviewCustomerVO> list = sqlSession.selectList("mapper.review.findReserveByMemberId",member_id);
-		
+
 		for(ReviewCustomerVO reserve : list) {
-			
+
 			int reserve_id = reserve.getReserve_id();
-			
+
 			ReviewAdminVO adminVO =  sqlSession.selectOne("mapper.review.findAdminByReserveId",reserve_id);
-			
-			reserve.setReviewAdminVO(adminVO);	
-			
+
+			reserve.setReviewAdminVO(adminVO);
+
 		}
-		
+
 		return list;
 	}
 
 	public List<ReviewCustomerVO> findReserve() {
-		
+
 		List<ReviewCustomerVO> list = sqlSession.selectList("mapper.review.findReserve");
-		
+
 		for(ReviewCustomerVO reserve : list) {
-			
+
 			int reserve_id = reserve.getReserve_id();
-			
+
 			ReviewAdminVO adminVO =  sqlSession.selectOne("mapper.review.findAdminByReserveId",reserve_id);
-			
-			reserve.setReviewAdminVO(adminVO);	
-			
+
+			reserve.setReviewAdminVO(adminVO);
+
 		}
-		
+
 		return list;
 	}
 
 	public ReviewCustomerVO getReserveByCustomId(int customer_id) {
-		
-		ReviewCustomerVO reserve = sqlSession.selectOne("mapper.review.getReserveByCustomId",customer_id);
-		
-		int reserve_id = reserve.getReserve_id();
-		
+
+			ReviewCustomerVO reserve = sqlSession.selectOne("mapper.review.getReserveByCustomId",customer_id);
+			if (reserve == null) return null;
+			int reserve_id = reserve.getReserve_id();
+
 		ReviewAdminVO adminVO = sqlSession.selectOne("mapper.review.findAdminReserveByreserveId",reserve_id);
-		
+
 		reserve.setReviewAdminVO(adminVO);
-				
+
 		return reserve;
 	}
 
 	public List<Integer> myCustomerList(int member_id) {
-		
+
 		return sqlSession.selectList("mapper.review.myCustomerList",member_id);
 	}
 
 
 	public List<ReviewVO> myReviewList(int member_id, int offset, int pageSize) {
-		
+
 		Map<String, Integer> paramMap = new HashMap<>();
-		
+
 		paramMap.put("memberId", member_id);
 		paramMap.put("offset", offset);
 		paramMap.put("pageSize", pageSize);
-		
+
 		List<ReviewVO> list = sqlSession.selectList("mapper.review.getPagedReviewListByMember",paramMap);
-		
+
 	    for(ReviewVO review : list) {
-	    	
+
 	    	int customer_id = review.getCustomer_id();
-	    	
+
 	    	int memberid = sqlSession.selectOne("mapper.member.findMeberIdByCustomerId",customer_id);
-	    	
+
 	    	String userName = sqlSession.selectOne("mapper.member.findNameByMemberId",memberid);
-	    	
+
 	    	review.setUserName(userName);
 	    }
-		
+
 		return list;
 	}
 
 	public int getMyReviewCount(HttpServletRequest req) {
-		
+
 		MemberVO member = (MemberVO)req.getSession().getAttribute("member");
-		
+
 		int memberId = member.getId();
-		
+
 		return sqlSession.selectOne("mapper.review.getMyReviewCount",memberId);
 	}
 
-}	
+}

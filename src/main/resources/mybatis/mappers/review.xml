@@ -109,8 +109,8 @@
 	
 
 	<!-- 리뷰 등록 (리뷰ID 반환) -->
-	<insert id="insertReview" parameterType="com.noir.review.vo.ReviewVO">
-	  INSERT INTO noir_review (
+		<insert id="insertReview" parameterType="com.noir.review.vo.ReviewVO">
+		  INSERT INTO noir_review (
 	    review_id,
 	    title,
 	    content,
@@ -120,28 +120,36 @@
 	      , photo_url
 	    </if>
 	  )
-	  VALUES (
-	    seq_noir_review_id.NEXTVAL,
-	    #{title},
-	    #{content},
-	    #{rating},
-	    #{customer_id}
+		  SELECT seq_noir_review_id.NEXTVAL,
+		    #{title}, #{content}, #{rating}, #{customer_id}
 	    <if test="photoUrls != null and photoUrls != ''">
 	      , #{photoUrls}
 	    </if>
-	  )
-	</insert>
+		  FROM dual
+		  WHERE EXISTS (
+		    SELECT 1 FROM customer_reservation cr
+		    WHERE cr.customer_id = #{customer_id}
+		      AND cr.member_id = #{member_id}
+		      AND cr.status = 'ACTIVE'
+		  )
+		  AND NOT EXISTS (
+		    SELECT 1 FROM noir_review r WHERE r.customer_id = #{customer_id}
+		  )
+		</insert>
 
 	<!-- 리뷰 수정 -->
 	<update id="updateReview" parameterType="com.noir.review.vo.ReviewVO">
 		UPDATE noir_review
 		SET title=#{title}, content=#{content}, rating=#{rating}, photo_url=#{photoUrls}
-		WHERE review_id=#{reviewId}
+			WHERE review_id=#{reviewId}
+			  AND customer_id IN (SELECT customer_id FROM customer_reservation WHERE member_id=#{member_id})
 	</update>
 
 	<!-- 리뷰 삭제 -->
-	<delete id="deleteReview" parameterType="long">
-		DELETE FROM noir_review WHERE review_id = #{reviewId}
+		<delete id="deleteReview" parameterType="map">
+			DELETE FROM noir_review
+			WHERE review_id = #{reviewId}
+			  AND customer_id IN (SELECT customer_id FROM customer_reservation WHERE member_id=#{memberId})
 	</delete>
 
 	<!-- 리뷰 이미지 등록 (여러번 호출됨) -->

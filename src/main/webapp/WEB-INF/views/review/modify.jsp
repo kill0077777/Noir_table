@@ -19,7 +19,7 @@
 	  opacity: 1;
 	  transform: translateY(0);
 	}
-	
+
 	/* 상단 아이콘 */
 	.icon_box {
 	  display: flex;
@@ -29,7 +29,7 @@
 	  width: 50px;
 	  height: 50px;
 	}
-	
+
     body {
         background-color: #fefefe;
         color: #111;
@@ -142,7 +142,7 @@
         background-color: #111;
         color: #fff;
     }
-	
+
 	.star-rating {
 	  display: inline-block;
 	}
@@ -174,10 +174,10 @@
     <h2 class="fade-up" style="text-align: center;">리뷰 수정</h2>
 
     <div class="review-container fade-up">
-    
+
 		<div style="display: flex; align-items: center; margin-bottom: 30px;">
 		    <label style="min-width: 70px; font-weight: bold;">제목:</label>
-		    <input type="text" name="title" value="${review.title}" 
+	            <input type="text" name="title" value="${fn:escapeXml(review.title)}"
 		           style="flex: 1; font-size: 1.1rem; font-weight: bold; padding: 8px 10px; border: 1px solid #ccc; border-radius: 6px; outline: none;" />
 		</div>
 
@@ -212,7 +212,7 @@
 		            </c:forEach>
 		        </div>
 		    </c:if>
-		
+
 		    <!-- 오른쪽: 새로 선택한 사진 미리보기 -->
 		    <div style="flex: 1;">
 		        <div id="newPreview" class="review-photo" style="margin-top: 10px;">
@@ -224,13 +224,12 @@
 
         <div class="review-content">
             <label><strong>내용</strong></label>
-            <textarea name="content">${review.content}</textarea>
+	            <textarea name="content"><c:out value="${review.content}" /></textarea>
         </div>
 
         <div style="margin-top: 20px;">
 	        <label><strong>사진 변경 :</strong></label><br>
-	        <input type="file" name="photoFiles" id="photoFiles" multiple accept="image/*" />
-	        <input type="hidden" name="photoUrls" value="${review.photoUrls}"/>
+			<input type="file" name="photoFiles" id="photoFiles" accept=".jpg,.jpeg,.png,.webp" />
         </div>
 
         <div class="review-buttons">

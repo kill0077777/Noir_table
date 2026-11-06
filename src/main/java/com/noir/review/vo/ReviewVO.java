@@ -9,7 +9,8 @@ public class ReviewVO {
 	private String title;
 	private String content;
 	private int rating;
-	private int customer_id; //고객 예약 ID
+		private int customer_id; //고객 예약 ID
+		private int member_id; //서버에서 확인한 작성자 회원 ID
 	private String photoUrls; // 멀티 이미지 지원
 	
 	private String userName;
@@ -23,9 +24,15 @@ public class ReviewVO {
 	public int getCustomer_id() {
 		return customer_id;
 	}
-	public void setCustomer_id(int customer_id) {
-		this.customer_id = customer_id;
-	}
+		public void setCustomer_id(int customer_id) {
+			this.customer_id = customer_id;
+		}
+		public int getMember_id() {
+			return member_id;
+		}
+		public void setMember_id(int member_id) {
+			this.member_id = member_id;
+		}
 	public int getReviewId() {
 		return reviewId;
 	}

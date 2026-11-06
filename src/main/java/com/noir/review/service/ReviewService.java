@@ -18,5 +18,5 @@ public interface ReviewService {
 	//리뷰게시판 수정(업데이트)
 	void updateReviewWithImages(ReviewVO review) throws Exception;
 	//리뷰게시판 삭제하기
-	void deleteReview(int reviewId, String uploadDir) throws Exception;
+	void deleteReview(int reviewId, int memberId, String uploadDir) throws Exception;
 }

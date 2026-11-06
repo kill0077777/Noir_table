@@ -57,9 +57,8 @@ public class ReviewServiceImpl implements ReviewService {
 
 	//리뷰게시판 삭제하기
 	@Override
-	public void deleteReview(int reviewId, String uploadDir) throws Exception {
-		
-		reviewDAO.deleteReview(reviewId);
+	public void deleteReview(int reviewId, int memberId, String uploadDir) throws Exception {
+		reviewDAO.deleteReview(reviewId, memberId);
 	}
 
 	

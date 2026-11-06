@@ -163,7 +163,7 @@ button[type="submit"] {
 	<!-- 이미지 업로드 -->
 	<div class="form-group">
 	    <label for="photoUrls">사진 첨부</label><br>
-		<input type="file" id="photoUrls" name="photoUrls" accept="image/*" onchange="previewImage(this)">
+			<input type="file" id="photoUrls" name="photoUrls" accept=".jpg,.jpeg,.png,.webp" onchange="previewImage(this)">
 	    <img id="preview" style="display:none; margin-top:10px; max-width:100%; max-height:300px; border-radius:8px; border:1px solid #ccc;">
 	    
 	</div>
