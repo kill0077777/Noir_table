@@ -30,8 +30,9 @@
 		<id property="reviewId" column="review_id"/>
 		<result property="title" column="title"/>
 		<result property="content" column="content"/>
-		<result property="rating" column="rating"/>
-		<result property="customer_id" column="customer_id"/>
+			<result property="rating" column="rating"/>
+			<result property="customer_id" column="customer_id"/>
+			<result property="reserve_id" column="reserve_id"/>
 		<result property="photoUrls" column="photo_url"/>
 	</resultMap>
 	
@@ -73,11 +74,11 @@
 	  SELECT * FROM (
 	    SELECT inner_query.*, ROWNUM rn
 	    FROM (
-	      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
-	             cr.reserve_id, cr.status, cr.seat_id, cr.member_id
-	      FROM noir_review r
-	      LEFT JOIN customer_reservation cr
-	        ON r.customer_id = cr.customer_id
+		      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
+		             r.reserve_id, cr.status, cr.seat_id, cr.member_id
+		      FROM noir_review r
+		      LEFT JOIN customer_reservation cr
+		        ON r.reserve_id = cr.reserve_id
 	      ORDER BY r.review_id DESC
 	    ) inner_query
 	    WHERE ROWNUM &lt;= #{offset} + #{limit}
@@ -111,30 +112,19 @@
 	<!-- 리뷰 등록 (리뷰ID 반환) -->
 		<insert id="insertReview" parameterType="com.noir.review.vo.ReviewVO">
 		  INSERT INTO noir_review (
-	    review_id,
-	    title,
-	    content,
-	    rating,
-	    customer_id
-	    <if test="photoUrls != null and photoUrls != ''">
-	      , photo_url
-	    </if>
-	  )
-		  SELECT seq_noir_review_id.NEXTVAL,
-		    #{title}, #{content}, #{rating}, #{customer_id}
-	    <if test="photoUrls != null and photoUrls != ''">
-	      , #{photoUrls}
-	    </if>
-		  FROM dual
-		  WHERE EXISTS (
-		    SELECT 1 FROM customer_reservation cr
-		    WHERE cr.customer_id = #{customer_id}
-		      AND cr.member_id = #{member_id}
-		      AND cr.status = 'ACTIVE'
+		    review_id, title, content, rating, customer_id, reserve_id
+		    <if test="photoUrls != null and photoUrls != ''">, photo_url</if>
 		  )
-		  AND NOT EXISTS (
-		    SELECT 1 FROM noir_review r WHERE r.customer_id = #{customer_id}
-		  )
+		  SELECT seq_noir_review_id.NEXTVAL, #{title}, #{content}, #{rating},
+		         cr.customer_id, cr.reserve_id
+		         <if test="photoUrls != null and photoUrls != ''">, #{photoUrls}</if>
+		  FROM customer_reservation cr
+		  WHERE cr.reserve_id = #{reserve_id}
+		    AND cr.member_id = #{member_id}
+		    AND cr.status = 'ACTIVE'
+		    AND NOT EXISTS (
+		      SELECT 1 FROM noir_review r WHERE r.reserve_id = cr.reserve_id
+		    )
 		</insert>
 
 	<!-- 리뷰 수정 -->
@@ -142,14 +132,14 @@
 		UPDATE noir_review
 		SET title=#{title}, content=#{content}, rating=#{rating}, photo_url=#{photoUrls}
 			WHERE review_id=#{reviewId}
-			  AND customer_id IN (SELECT customer_id FROM customer_reservation WHERE member_id=#{member_id})
+			  AND reserve_id IN (SELECT reserve_id FROM customer_reservation WHERE member_id=#{member_id})
 	</update>
 
 	<!-- 리뷰 삭제 -->
 		<delete id="deleteReview" parameterType="map">
 			DELETE FROM noir_review
 			WHERE review_id = #{reviewId}
-			  AND customer_id IN (SELECT customer_id FROM customer_reservation WHERE member_id=#{memberId})
+			  AND reserve_id IN (SELECT reserve_id FROM customer_reservation WHERE member_id=#{memberId})
 	</delete>
 
 	<!-- 리뷰 이미지 등록 (여러번 호출됨) -->
@@ -172,9 +162,13 @@
 			SELECT * FROM customer_reservation
 	</select>
 	
-	<select id="getReserveByCustomId" parameterType="int" resultMap="reviewCustomerMap">
-		select * from customer_reservation where customer_id=#{customer_id}
-	</select>
+		<select id="getReserveByCustomId" parameterType="int" resultMap="reviewCustomerMap">
+			select * from customer_reservation where customer_id=#{customer_id}
+		</select>
+
+		<select id="getReserveByReserveId" parameterType="int" resultMap="reviewCustomerMap">
+			select * from customer_reservation where reserve_id=#{reserveId}
+		</select>
 	
 	<select id="findAdminReserveByreserveId" parameterType="int" resultMap="reviewAdminMap">
 		select * from admin_reservation where reserve_id = #{reserve_id}
@@ -185,18 +179,19 @@
 	</select>
 	
 	<select id="myReviewList" parameterType="int" resultMap="reviewMap">
-		select * from noir_review where customer_id = #{customer_id}
+			select * from noir_review where reserve_id in
+			(select reserve_id from customer_reservation where member_id = #{customer_id})
 	</select>
 	
 	<select id="getPagedReviewListByMember" parameterType="map" resultMap="reviewMap">
 	  SELECT * FROM (
 	    SELECT inner_query.*, ROWNUM rn
 	    FROM (
-	      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
-	             cr.reserve_id, cr.status, cr.seat_id, cr.member_id
-	      FROM noir_review r
-	      JOIN customer_reservation cr
-	        ON r.customer_id = cr.customer_id
+		      SELECT r.review_id, r.title, r.content, r.rating, r.customer_id,
+		             r.reserve_id, cr.status, cr.seat_id, cr.member_id
+		      FROM noir_review r
+		      JOIN customer_reservation cr
+		        ON r.reserve_id = cr.reserve_id
 	      WHERE cr.member_id = #{memberId}
 	      ORDER BY r.review_id DESC
 	    ) inner_query
@@ -209,7 +204,7 @@
 		SELECT COUNT(*)
 		FROM noir_review r
 		JOIN customer_reservation cr
-		  ON r.customer_id = cr.customer_id
+			  ON r.reserve_id = cr.reserve_id
 		WHERE cr.member_id = #{memberId}
 	</select>
 </mapper>

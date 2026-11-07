@@ -3,6 +3,7 @@ package com.noir.review.dao;
 import java.util.List;
 
 import com.noir.review.vo.ReviewVO;
+import com.noir.review.vo.ReviewCustomerVO;
 
 public interface ReviewDAO {
 
@@ -21,6 +22,7 @@ public interface ReviewDAO {
 
 	//리뷰게시판 삭제하기
 	void deleteReview(int reviewId, int memberId) throws Exception;
+	ReviewCustomerVO getReserveByReserveId(int reserveId) throws Exception;
 
 	// 이미지 관련
 	List<String> selectReviewPhotos(Long reviewId) throws Exception;

@@ -136,6 +136,15 @@ public class ReviewDAOImpl implements ReviewDAO {
 		return reserve;
 	}
 
+	@Override
+	public ReviewCustomerVO getReserveByReserveId(int reserveId) throws Exception {
+		ReviewCustomerVO reserve = sqlSession.selectOne("mapper.review.getReserveByReserveId", reserveId);
+		if (reserve == null) return null;
+		ReviewAdminVO adminVO = sqlSession.selectOne("mapper.review.findAdminReserveByreserveId", reserveId);
+		reserve.setReviewAdminVO(adminVO);
+		return reserve;
+	}
+
 	public List<Integer> myCustomerList(int member_id) {
 
 		return sqlSession.selectList("mapper.review.myCustomerList",member_id);

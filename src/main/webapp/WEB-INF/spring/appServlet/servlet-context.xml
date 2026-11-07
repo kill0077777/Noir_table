@@ -27,7 +27,6 @@
 	 -->
 	<mvc:resources mapping="/upload/gallery/**" location="file:///C:/upload/noir/gallery/" />
 	<mvc:resources mapping="/upload/profile/**" location="file:///C:/upload/noir/profile/" />
-	<mvc:resources mapping="/upload/review/**" location="file:///C:/upload/noir/review/" />
 	
     <!-- 
     	요약 : /resource 폴더의 HTML, 자바스크립트, 제이쿼리, 이미지파일들을 읽어 들이기 위해 설정. 

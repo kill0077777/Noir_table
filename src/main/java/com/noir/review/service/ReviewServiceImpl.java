@@ -23,7 +23,7 @@ public class ReviewServiceImpl implements ReviewService {
 
 	@Autowired
 	private ReviewDAOImpl reviewDAO;
-	
+
 	@Override
 	public List<ReviewVO> getReviewsByPaging(int offset, int limit) throws Exception {
 		return reviewDAO.selectReviewsByPaging(offset, limit);
@@ -37,18 +37,18 @@ public class ReviewServiceImpl implements ReviewService {
 	//리뷰게시판 상세페이지 보기
 	@Override
 	public ReviewVO getReviewById(int reviewId) throws Exception {
-		
+
 		ReviewVO review = reviewDAO.selectReviewById(reviewId);
-		
+
 		return review;
 	}
 
 	@Override
 	public void addReviewWithImages(ReviewVO review) throws Exception {
-		
+
 		reviewDAO.insertReview(review);
 	}
-	
+
 	//
 	@Override
 	public void updateReviewWithImages(ReviewVO review) throws Exception {
@@ -61,55 +61,60 @@ public class ReviewServiceImpl implements ReviewService {
 		reviewDAO.deleteReview(reviewId, memberId);
 	}
 
-	
+
 	//고객 리뷰 남길수 있는 목록 불러오기
 	public List<ReviewCustomerVO> getCustomerReservation(HttpServletRequest request) {
-		
+
 		HttpSession session = request.getSession();
-		
+
 		MemberVO member = (MemberVO) session.getAttribute("member");
-		
+
 		int member_id = member.getId();
-		
+
 		List<ReviewCustomerVO> list = reviewDAO.findReserveByMemberId(member_id);
-		
+
 		return list;
-				
+
 	}
-	
+
 	//고객 리뷰 남길수 있는 목록 불러오기
 	public List<ReviewCustomerVO> getCustomerReservation2(HttpServletRequest request) {
-		
+
 
 		List<ReviewCustomerVO> list = reviewDAO.findReserve();
-		
+
 		return list;
-		
-	}
-	
-	
-	public ReviewCustomerVO getReserveByCustomId(int customer_id) {
-		
-		return reviewDAO.getReserveByCustomId(customer_id);
+
 	}
 
+
+	public ReviewCustomerVO getReserveByCustomId(int customer_id) {
+
+			return reviewDAO.getReserveByCustomId(customer_id);
+		}
+
+		@Override
+		public ReviewCustomerVO getReserveByReserveId(int reserveId) throws Exception {
+			return reviewDAO.getReserveByReserveId(reserveId);
+		}
+
 	public List<ReviewVO> myReviewList(HttpServletRequest req,int offset,int pageSize) {
-		
+
 		HttpSession session = req.getSession();
-		
+
 		MemberVO member = (MemberVO) session.getAttribute("member");
-		
+
 		int member_id = member.getId();
-		
+
 		List<ReviewVO> myReviewList = reviewDAO.myReviewList(member_id,offset,pageSize);
-		
-		
-		
+
+
+
 		return myReviewList;
 	}
 
 	public int getMyReviewCount(HttpServletRequest req) {
-		
+
 		return reviewDAO.getMyReviewCount(req);
 	}
 

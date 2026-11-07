@@ -3,6 +3,7 @@
 <% request.setCharacterEncoding("UTF-8"); %>
 <c:set var="contextPath" value="${pageContext.request.contextPath}"/>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <!-- FontAwesome for stars -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -115,18 +116,19 @@ button[type="submit"] {
 <h2 class="fade-up" style="text-align: center;">리뷰 작성</h2>
 
 <form action="${contextPath}/review/write.do" method="post" enctype="multipart/form-data" class="fade-up">
+	<sec:csrfInput />
 	<!-- 예약 선택 -->
 	<!-- 고객 예약 ID -->
 	<div class="line">
-	    <label for="customer_id">리뷰 작성할 예약 선택</label><br>
-	    <select name="customer_id" id="customer_id" required>
+		    <label for="reserve_id">리뷰 작성할 예약 선택</label><br>
+		    <select name="reserve_id" id="reserve_id" required>
 	        <option value="">예약을 선택하세요</option>
 			<c:set var="today" value="<%= new java.text.SimpleDateFormat(\"yyyy-MM-dd\").format(new java.util.Date()) %>" />
 			
 			<c:forEach var="reserve" items="${reserveList}">
 			  <c:if test="${reserve.status == 'ACTIVE'}">
 			    <c:if test="${reserve.reviewAdminVO.reserve_date <= today}">
-			      <option value="${reserve.customer_id}">
+			      <option value="${reserve.reserve_id}">
 			        ${reserve.reviewAdminVO.reserve_date} / ${reserve.reviewAdminVO.meal_time} (${reserve.reviewAdminVO.time_slot})
 			      </option>
 			    </c:if>

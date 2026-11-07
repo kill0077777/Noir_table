@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <% request.setCharacterEncoding("UTF-8"); %>
 <c:set var="contextPath" value="${pageContext.request.contextPath}" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -188,7 +189,7 @@
 	    <c:when test="${not empty review.photoUrls}">
 	        <div class="review-photo">
 	            <c:forEach var="photo" items="${fn:split(review.photoUrls, ',')}">
-	                <img src="${contextPath}/upload/review/${photo}" alt="리뷰 사진" />
+		                <img src="${contextPath}/review/image/${photo}" alt="리뷰 사진" />
 	            </c:forEach>
 	        </div>
 	    </c:when>
@@ -207,6 +208,7 @@
                     <button type="submit">수정</button>
                 </form>
                 <form action="${contextPath}/review/delete.do" method="post" style="display:inline;">
+                    <sec:csrfInput />
                     <input type="hidden" name="reviewId" value="${review.reviewId}" />
                     <button type="submit" onclick="return confirm('정말 삭제하시겠습니까?');">삭제</button>
                 </form>

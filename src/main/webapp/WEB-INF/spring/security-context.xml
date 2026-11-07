@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+      http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!-- 기존 세션 인증 구조는 유지하고, 우선 리뷰 상태 변경 요청에 CSRF 검사를 적용합니다. -->
+    <http auto-config="false" use-expressions="true" entry-point-ref="csrfEntryPoint">
+        <csrf token-repository-ref="csrfTokenRepository" request-matcher-ref="reviewCsrfMatcher" />
+    </http>
+
+    <beans:bean id="csrfTokenRepository"
+        class="org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository">
+        <beans:property name="headerName" value="X-CSRF-TOKEN" />
+        <beans:property name="parameterName" value="_csrf" />
+    </beans:bean>
+
+    <beans:bean id="csrfEntryPoint"
+        class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint" />
+
+    <beans:bean id="reviewCsrfMatcher"
+        class="com.noir.security.ReviewCsrfRequestMatcher" />
+</beans:beans>

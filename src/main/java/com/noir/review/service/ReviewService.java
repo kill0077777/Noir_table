@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.noir.review.vo.ReviewVO;
+import com.noir.review.vo.ReviewCustomerVO;
 
 public interface ReviewService {
 
@@ -19,4 +20,5 @@ public interface ReviewService {
 	void updateReviewWithImages(ReviewVO review) throws Exception;
 	//리뷰게시판 삭제하기
 	void deleteReview(int reviewId, int memberId, String uploadDir) throws Exception;
+	ReviewCustomerVO getReserveByReserveId(int reserveId) throws Exception;
 }

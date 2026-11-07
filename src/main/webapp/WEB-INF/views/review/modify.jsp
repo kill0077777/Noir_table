@@ -2,6 +2,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 <% request.setCharacterEncoding("UTF-8"); %>
 <c:set var="contextPath" value="${pageContext.request.contextPath}" />
 
@@ -166,6 +167,7 @@
 </style>
 
 <form action="${contextPath}/review/update.do" method="post" enctype="multipart/form-data">
+    <sec:csrfInput />
     <input type="hidden" name="reviewId" value="${review.reviewId}" />
 
     <div class="icon_box fade-up" style="margin-top:30px; margin-bottom:20px;">
@@ -208,7 +210,7 @@
 		        <div class="review-photo" style="flex: 1;">
 		            <p><strong>현재 첨부 사진:</strong></p>
 		            <c:forEach var="photo" items="${fn:split(review.photoUrls, ',')}">
-		                <img src="${contextPath}/upload/review/${photo}" alt="리뷰 사진" />
+		                <img src="${contextPath}/review/image/${photo}" alt="리뷰 사진" />
 		            </c:forEach>
 		        </div>
 		    </c:if>

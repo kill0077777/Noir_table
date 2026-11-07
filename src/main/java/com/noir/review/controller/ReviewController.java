@@ -1,12 +1,7 @@
 package com.noir.review.controller;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
-import java.util.UUID;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.noir.member.vo.MemberVO;
 import com.noir.review.service.ReviewServiceImpl;
+import com.noir.review.service.ReviewFileStorageService;
 import com.noir.review.vo.ReviewCustomerVO;
 import com.noir.review.vo.ReviewVO;
 
@@ -29,11 +25,11 @@ import com.noir.review.vo.ReviewVO;
 @RequestMapping("/review/*")
 public class ReviewController {
 
-    private static final Path UPLOAD_DIR = Paths.get("C:/upload/noir/review/").toAbsolutePath().normalize();
-    private static final long MAX_IMAGE_SIZE = 5L * 1024L * 1024L;
-
     @Autowired
     private ReviewServiceImpl reviewService;
+
+    @Autowired
+    private ReviewFileStorageService fileStorage;
 
     @RequestMapping(value="/list.do")
     public ModelAndView reviewList(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -62,7 +58,7 @@ public class ReviewController {
         }
         ModelAndView mav = new ModelAndView((String)request.getAttribute("viewName"));
         mav.addObject("review", review);
-        mav.addObject("reserve", reviewService.getReserveByCustomId(review.getCustomer_id()));
+        mav.addObject("reserve", reviewService.getReserveByReserveId(review.getReserve_id()));
         return mav;
     }
 
@@ -76,14 +72,14 @@ public class ReviewController {
 
     @RequestMapping(value="/write.do", method=RequestMethod.POST)
     public ModelAndView writeReview(@RequestParam("photoUrls") MultipartFile photoFile,
-            @RequestParam("customer_id") int customerId, @RequestParam("title") String title,
+            @RequestParam("reserve_id") int reserveId, @RequestParam("title") String title,
             @RequestParam("content") String content, @RequestParam("rating") int rating,
             HttpServletRequest request, HttpServletResponse response) throws Exception {
         MemberVO member = requireMember(request, response);
         if (member == null) return null;
         validateReview(title, content, rating);
 
-        ReviewCustomerVO reservation = reviewService.getReserveByCustomId(customerId);
+        ReviewCustomerVO reservation = reviewService.getReserveByReserveId(reserveId);
         if (reservation == null || reservation.getMember_id() != member.getId()) {
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
             return null;
@@ -91,17 +87,18 @@ public class ReviewController {
 
         ReviewVO review = new ReviewVO();
         review.setContent(content.trim());
-        review.setCustomer_id(customerId);
+        review.setReserve_id(reserveId);
+        review.setCustomer_id(reservation.getCustomer_id());
         review.setMember_id(member.getId());
         review.setTitle(title.trim());
         review.setRating(rating);
         String savedName = null;
         try {
-            savedName = saveImage(photoFile);
+            savedName = fileStorage.store(photoFile);
             review.setPhotoUrls(savedName);
             reviewService.addReviewWithImages(review);
         } catch (Exception e) {
-            deleteImage(savedName);
+            fileStorage.delete(savedName);
             throw e;
         }
         return new ModelAndView("redirect:/review/list.do");
@@ -117,7 +114,7 @@ public class ReviewController {
         if (!ownsReview(review, member)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return null; }
         ModelAndView mav = new ModelAndView((String)request.getAttribute("viewName"));
         mav.addObject("review", review);
-        mav.addObject("reserve", reviewService.getReserveByCustomId(review.getCustomer_id()));
+        mav.addObject("reserve", reviewService.getReserveByReserveId(review.getReserve_id()));
         return mav;
     }
 
@@ -142,15 +139,15 @@ public class ReviewController {
         String newName = null;
         try {
             if (photoFile != null && !photoFile.isEmpty()) {
-                newName = saveImage(photoFile);
+                newName = fileStorage.store(photoFile);
                 review.setPhotoUrls(newName);
             } else {
                 review.setPhotoUrls(existing.getPhotoUrls());
             }
             reviewService.updateReviewWithImages(review);
-            if (newName != null) deleteImage(existing.getPhotoUrls());
+            if (newName != null) fileStorage.delete(existing.getPhotoUrls());
         } catch (Exception e) {
-            deleteImage(newName);
+            fileStorage.delete(newName);
             throw e;
         }
         return new ModelAndView("redirect:/review/detail.do?reviewId=" + reviewId);
@@ -164,8 +161,8 @@ public class ReviewController {
         ReviewVO review = reviewService.getReviewById(reviewId);
         if (review == null) { response.sendError(HttpServletResponse.SC_NOT_FOUND); return null; }
         if (!ownsReview(review, member)) { response.sendError(HttpServletResponse.SC_FORBIDDEN); return null; }
-        reviewService.deleteReview(reviewId, member.getId(), UPLOAD_DIR.toString());
-        deleteImage(review.getPhotoUrls());
+        reviewService.deleteReview(reviewId, member.getId(), "external");
+        fileStorage.delete(review.getPhotoUrls());
         return new ModelAndView("redirect:/review/list.do");
     }
 
@@ -190,7 +187,7 @@ public class ReviewController {
     }
 
     private boolean ownsReview(ReviewVO review, MemberVO member) {
-        ReviewCustomerVO reservation = reviewService.getReserveByCustomId(review.getCustomer_id());
+        ReviewCustomerVO reservation = reviewService.getReserveByReserveId(review.getReserve_id());
         return reservation != null && reservation.getMember_id() == member.getId();
     }
 
@@ -212,25 +209,4 @@ public class ReviewController {
         if (rating < 1 || rating > 5) throw new IllegalArgumentException("별점은 1~5 사이여야 합니다.");
     }
 
-    private String saveImage(MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) return null;
-        if (file.getSize() > MAX_IMAGE_SIZE) throw new IOException("이미지 크기 제한 초과");
-        String original = file.getOriginalFilename();
-        String extension = original == null ? "" : original.substring(original.lastIndexOf('.') + 1).toLowerCase();
-        if (!("jpg".equals(extension) || "jpeg".equals(extension) || "png".equals(extension) || "webp".equals(extension)))
-            throw new IOException("허용되지 않은 이미지 형식");
-        String name = UUID.randomUUID().toString() + "." + extension;
-        Files.createDirectories(UPLOAD_DIR);
-        Path target = UPLOAD_DIR.resolve(name).normalize();
-        if (!target.startsWith(UPLOAD_DIR)) throw new IOException("잘못된 저장 경로");
-        file.transferTo(target.toFile());
-        return name;
-    }
-
-    private void deleteImage(String fileName) throws IOException {
-        if (fileName == null || fileName.trim().isEmpty()) return;
-        Path target = UPLOAD_DIR.resolve(new File(fileName).getName()).normalize();
-        if (!target.startsWith(UPLOAD_DIR)) return;
-        Files.deleteIfExists(target);
-    }
 }
